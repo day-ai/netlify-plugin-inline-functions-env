@@ -1,10 +1,10 @@
 import { listFunctionsFiles } from '@netlify/zip-it-and-ship-it'
 
-const fs = require('fs')
-const util = require('util')
-const babel = require('@babel/core')
-const inlinePlugin = require('babel-plugin-transform-inline-environment-variables')
-const { normalizeInputValue, isJsFunction, getSrcFile, uniq } = require('./lib')
+import fs from 'node:fs'
+import util from 'node:util'
+import babel from '@babel/core'
+import inlinePlugin from 'babel-plugin-transform-inline-environment-variables'
+import { normalizeInputValue, isJsFunction, getSrcFile, uniq } from './lib'
 const writeFile = util.promisify(fs.writeFile)
 
 async function inlineEnv(path, options = {}, verbose = false) {

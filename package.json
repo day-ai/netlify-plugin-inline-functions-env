@@ -5,6 +5,7 @@
   "homepage": "https://github.com/bencao/netlify-plugin-inline-functions-env",
   "bugs": "https://github.com/bencao/netlify-plugin-inline-functions-env/issues",
   "main": "index.js",
+  "type": "module",
   "files": [
     "index.js",
     "lib.js",
