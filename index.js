@@ -69,8 +69,8 @@ async function processFiles({ inputs, utils, netlifyConfig }) {
   let netlifyFunctions = []
 
   try {
-    console.log('netlifyConfig.build.functionsDirectory: ', netlifyConfig.build.functionsDirectory)
-    netlifyFunctions = await listFunctionsFiles(netlifyConfig.build.functionsDirectory)
+    console.log('netlifyConfig.functionsDirectory: ', netlifyConfig.functionsDirectory)
+    netlifyFunctions = await listFunctionsFiles([netlifyConfig.functionsDirectory])
   } catch (functionMissingErr) {
     console.log(functionMissingErr) // functions can be there but there is an error when executing
     return utils.build.failBuild(
