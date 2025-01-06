@@ -4,8 +4,41 @@ import fs from 'node:fs'
 import util from 'node:util'
 import babel from '@babel/core'
 import inlinePlugin from 'babel-plugin-transform-inline-environment-variables'
-import { normalizeInputValue, isJsFunction, getSrcFile, uniq } from './lib'
 const writeFile = util.promisify(fs.writeFile)
+
+function normalizeInputValue(singleOrArrayValue) {
+  if (!singleOrArrayValue) {
+    return singleOrArrayValue
+  } else if (Array.isArray(singleOrArrayValue)) {
+    return singleOrArrayValue
+  } else {
+    return [singleOrArrayValue]
+  }
+}
+
+function isJsFunction({ runtime, extension, srcFile }) {
+  return (
+    runtime === 'js' &&
+    extension === '.js' &&
+    !srcFile.includes('/node_modules/')
+  )
+}
+
+function getSrcFile({ srcFile }) {
+  return srcFile
+}
+
+export function uniq(items) {
+  const uniqItems = []
+
+  items.forEach((item) => {
+    if (!uniqItems.includes(item)) {
+      uniqItems.push(item)
+    }
+  })
+
+  return uniqItems
+}
 
 async function inlineEnv(path, options = {}, verbose = false) {
   console.log('inlining', path)
@@ -36,8 +69,8 @@ async function processFiles({ inputs, utils, netlifyConfig }) {
   let netlifyFunctions = []
 
   try {
-    console.log('netlifyConfig.build.functions: ', netlifyConfig.build.functions)
-    netlifyFunctions = await listFunctionsFiles(netlifyConfig.build.functions)
+    console.log('netlifyConfig.build.functionsDirectory: ', netlifyConfig.build.functionsDirectory)
+    netlifyFunctions = await listFunctionsFiles(netlifyConfig.build.functionsDirectory)
   } catch (functionMissingErr) {
     console.log(functionMissingErr) // functions can be there but there is an error when executing
     return utils.build.failBuild(
