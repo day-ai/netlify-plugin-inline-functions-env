@@ -93,4 +93,4 @@ const handler = (inputs) => {
 // expose for testing
 handler.processFiles = processFiles
 
-module.exports = handler
+export default handler

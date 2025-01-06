@@ -1,4 +1,4 @@
-function normalizeInputValue(singleOrArrayValue) {
+export function normalizeInputValue(singleOrArrayValue) {
   if (!singleOrArrayValue) {
     return singleOrArrayValue
   } else if (Array.isArray(singleOrArrayValue)) {
@@ -8,7 +8,7 @@ function normalizeInputValue(singleOrArrayValue) {
   }
 }
 
-function isJsFunction({ runtime, extension, srcFile }) {
+export function isJsFunction({ runtime, extension, srcFile }) {
   return (
     runtime === 'js' &&
     extension === '.js' &&
@@ -16,11 +16,11 @@ function isJsFunction({ runtime, extension, srcFile }) {
   )
 }
 
-function getSrcFile({ srcFile }) {
+export function getSrcFile({ srcFile }) {
   return srcFile
 }
 
-function uniq(items) {
+export function uniq(items) {
   const uniqItems = []
 
   items.forEach((item) => {
@@ -30,11 +30,4 @@ function uniq(items) {
   })
 
   return uniqItems
-}
-
-module.exports = {
-  normalizeInputValue,
-  isJsFunction,
-  getSrcFile,
-  uniq,
 }
