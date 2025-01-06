@@ -1,10 +1,14 @@
-import { listFunctionsFiles } from '@netlify/zip-it-and-ship-it'
-
 import fs from 'node:fs'
 import util from 'node:util'
+import process from 'node:process'
 import babel from '@babel/core'
 import inlinePlugin from 'babel-plugin-transform-inline-environment-variables'
+import path from 'node:path'
 const writeFile = util.promisify(fs.writeFile)
+
+const DIRECTORY_TO_INLINE = `${process.cwd()}/api/dist`
+const ALLOWED_EXTENSIONS = ['.js']
+const EXCLUDED_DIRECTORIES = ['node_modules']
 
 function normalizeInputValue(singleOrArrayValue) {
   if (!singleOrArrayValue) {
@@ -14,30 +18,6 @@ function normalizeInputValue(singleOrArrayValue) {
   } else {
     return [singleOrArrayValue]
   }
-}
-
-function isJsFunction({ runtime, extension, srcFile }) {
-  return (
-    runtime === 'js' &&
-    extension === '.js' &&
-    !srcFile.includes('/node_modules/')
-  )
-}
-
-function getSrcFile({ srcFile }) {
-  return srcFile
-}
-
-export function uniq(items) {
-  const uniqItems = []
-
-  items.forEach((item) => {
-    if (!uniqItems.includes(item)) {
-      uniqItems.push(item)
-    }
-  })
-
-  return uniqItems
 }
 
 async function inlineEnv(path, options = {}, verbose = false) {
@@ -56,7 +36,32 @@ async function inlineEnv(path, options = {}, verbose = false) {
   await writeFile(path, transformed.code, 'utf8')
 }
 
-async function processFiles({ inputs, utils, netlifyConfig }) {
+function getAllowedFiles(dirPath, extensions, excludedDirectories) {
+  const files = []
+  
+  function traverse(currentPath) {
+    const entries = fs.readdirSync(currentPath, { withFileTypes: true })
+    
+    for (const entry of entries) {
+      const fullPath = path.join(currentPath, entry.name)
+
+      if (entry.isDirectory()) {
+        traverse(fullPath)
+      } else if (entry.isFile()) {
+        const ext = path.extname(fullPath)
+        if (extensions.includes(ext) && !excludedDirectories.some(dir => fullPath.includes(dir))) {
+          files.push(fullPath)
+        }
+      }
+    }
+  }
+  
+  traverse(dirPath)
+  
+  return files
+}
+
+async function processFiles({ inputs, utils }) {
   const verbose = !!inputs.verbose
 
   if (verbose) {
@@ -66,25 +71,16 @@ async function processFiles({ inputs, utils, netlifyConfig }) {
     )
   }
 
-  let netlifyFunctions = []
+  let files
 
-  try {
-    console.log('netlifyConfig.functionsDirectory: ', netlifyConfig.functionsDirectory)
-    netlifyFunctions = await listFunctionsFiles([netlifyConfig.functionsDirectory], {
-      config: {
-        '*': {
-          nodeBundler: 'esbuild',
-        },
-      },
-    })
-  } catch (functionMissingErr) {
-    console.log(functionMissingErr) // functions can be there but there is an error when executing
+  try{
+    files = getAllowedFiles(DIRECTORY_TO_INLINE, ALLOWED_EXTENSIONS, EXCLUDED_DIRECTORIES)
+  } catch (err) {
     return utils.build.failBuild(
-      'Failed to inline function files because netlify function folder was not configured or pointed to a wrong folder, please check your configuration'
+      `Failed to read files from target directory for inlining:\n${err.message}`,
+      { error: err }
     )
   }
-
-  const files = uniq(netlifyFunctions.filter(isJsFunction).map(getSrcFile))
 
   if (files.length !== 0) {
     try {
