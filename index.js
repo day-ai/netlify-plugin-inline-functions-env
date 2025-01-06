@@ -2,6 +2,7 @@ const fs = require('fs')
 const util = require('util')
 const babel = require('@babel/core')
 const inlinePlugin = require('babel-plugin-transform-inline-environment-variables')
+const {listFunctionsFiles} = require('@netlify/zip-it-and-ship-it')
 const { normalizeInputValue, isJsFunction, getSrcFile, uniq } = require('./lib')
 const writeFile = util.promisify(fs.writeFile)
 
@@ -21,7 +22,7 @@ async function inlineEnv(path, options = {}, verbose = false) {
   await writeFile(path, transformed.code, 'utf8')
 }
 
-async function processFiles({ inputs, utils }) {
+async function processFiles({ inputs, utils, netlifyConfig }) {
   const verbose = !!inputs.verbose
 
   if (verbose) {
@@ -34,7 +35,8 @@ async function processFiles({ inputs, utils }) {
   let netlifyFunctions = []
 
   try {
-    netlifyFunctions = await utils.functions.listAll()
+    console.log('netlifyConfig.build.functions: ', netlifyConfig.build.functions)
+    netlifyFunctions = await listFunctionsFiles(netlifyConfig.build.functions)
   } catch (functionMissingErr) {
     console.log(functionMissingErr) // functions can be there but there is an error when executing
     return utils.build.failBuild(
