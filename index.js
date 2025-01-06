@@ -1,8 +1,9 @@
+import { listFunctionsFiles } from '@netlify/zip-it-and-ship-it'
+
 const fs = require('fs')
 const util = require('util')
 const babel = require('@babel/core')
 const inlinePlugin = require('babel-plugin-transform-inline-environment-variables')
-const {listFunctionsFiles} = require('@netlify/zip-it-and-ship-it')
 const { normalizeInputValue, isJsFunction, getSrcFile, uniq } = require('./lib')
 const writeFile = util.promisify(fs.writeFile)
 
